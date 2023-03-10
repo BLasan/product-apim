@@ -948,6 +948,31 @@ public class APISecurityTestCase extends APIManagerLifecycleBaseTest {
         Assert.assertEquals(response.getResponseCode(), 401);
     }
 
+    @Test(description = "Testing the invocation with Corrupted Bearer Token", dependsOnMethods = {
+            "testCreateAndPublishAPIWithOAuth2" }) public void testInvokeJWTAsAInvalidBearerToken() throws Exception {
+
+        URL tokenEndpointURL = new URL(keyManagerHTTPSURL + "oauth2/token");
+        String subsAccessTokenPayload = APIMTestCaseUtils.getPayloadForPasswordGrant(user.getUserName(),
+                user.getPassword());
+        HttpResponse response = restAPIStore.generateUserAccessKey(consumerKey, consumerSecret, subsAccessTokenPayload,
+                tokenEndpointURL);
+        JSONObject subsAccessTokenGenerationResponse = new JSONObject(
+                restAPIStore.generateUserAccessKey(consumerKey, consumerSecret, subsAccessTokenPayload,
+                        tokenEndpointURL).getData());
+        Assert.assertEquals(response.getResponseCode(), 401);
+        Assert.assertEquals(subsAccessTokenGenerationResponse.getString("error"), "invalid_client");
+
+        subsAccessTokenPayload = "grant_type=" + APIMIntegrationConstants.GRANT_TYPE.CLIENT_CREDENTIAL;
+        response = restAPIStore.generateUserAccessKey(consumerKey, consumerSecret, subsAccessTokenPayload,
+                tokenEndpointURL);
+        subsAccessTokenGenerationResponse = new JSONObject(
+                restAPIStore.generateUserAccessKey(consumerKey, consumerSecret, subsAccessTokenPayload,
+                        tokenEndpointURL).getData());
+        Assert.assertEquals(response.getResponseCode(), 401);
+        Assert.assertEquals(subsAccessTokenGenerationResponse.getString("error"), "invalid_client");
+
+    }
+
     @Test(description = "Testing the invocation with Revoked API Keys", dependsOnMethods =
             {"testCreateAndPublishAPIWithOAuth2"})
     public void testInvokeInternalKeyAsJWTNegative() throws Exception {
